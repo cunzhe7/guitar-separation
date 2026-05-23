@@ -1,0 +1,17 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.venv/
+venv/
+build/
+dist/
+
+output/
+*.wav
+*.mp3
+*.mid
+*.midi
+
+.claude/
+

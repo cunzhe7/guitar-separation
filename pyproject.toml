@@ -1,0 +1,52 @@
+[project]
+name = "guitarmidi"
+version = "0.1.0"
+description = "Audio-to-MIDI pipeline for hand-tabbing guitar parts"
+requires-python = ">=3.11,<3.12"
+dependencies = [
+    "yt-dlp",
+    "demucs>=4.0",
+    "basic-pitch>=0.4",
+    "soundfile>=0.12",
+    "numpy>=1.24",
+    "click>=8.0",
+    "torch>=2.0",
+    "torchaudio>=2.0",
+    # tensorflow-io-gcs-filesystem stopped shipping win32 wheels after 0.31.0;
+    # newer versions are sdist-only and fail to install on Windows.
+    "tensorflow-io-gcs-filesystem<0.32; sys_platform == 'win32'",
+    # On Windows, the `tensorflow` wheel is a 2KB shim that depends on
+    # `tensorflow-intel` at runtime. uv doesn't follow that dependency, so
+    # we declare it explicitly here — otherwise `uv sync` produces an env
+    # where `import tensorflow` fails.
+    "tensorflow-intel==2.15.0; sys_platform == 'win32'",
+]
+
+[dependency-groups]
+dev = ["pytest>=7.0"]
+
+[project.scripts]
+guitarmidi = "guitarmidi.cli:main"
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["guitarmidi*"]
+exclude = ["tests*"]
+
+# Pull torch/torchaudio from PyTorch's CUDA index so we get GPU-enabled wheels
+# on Windows (default PyPI wheels are CPU-only). cu128 supports drivers
+# >=525.60 (Linux) / >=527.41 (Windows); user's driver is 581.95.
+# TensorFlow on Windows is CPU-only after 2.10, so basic-pitch transcription
+# runs on CPU regardless. Only demucs separation benefits from CUDA, which is
+# the heavy step anyway.
+[[tool.uv.index]]
+name = "pytorch-cu128"
+url = "https://download.pytorch.org/whl/cu128"
+explicit = true
+
+[tool.uv.sources]
+torch = [{ index = "pytorch-cu128" }]
+torchaudio = [{ index = "pytorch-cu128" }]
